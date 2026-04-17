@@ -252,22 +252,26 @@ tbody tr:hover td{background:#fafafa}
 
 <div class="card">
   <div class="doc-footer">
-    <div class="footer-info">
-      <span class="footer-label">입금 계좌</span>
-      <div style="display:flex;align-items:center;gap:8px;border-bottom:0.5px solid #ddd;padding-bottom:6px;margin-bottom:.75rem;flex-wrap:wrap">
-        <input style="width:85px;border:none;border-bottom:0.5px solid #ddd;padding:3px 4px;font-size:13px;background:transparent;color:#1a1a1a;outline:none;font-family:inherit" placeholder="은행명" autocomplete="off">
-        <input style="flex:1;min-width:110px;border:none;border-bottom:0.5px solid #ddd;padding:3px 4px;font-size:13px;background:transparent;color:#1a1a1a;outline:none;font-family:inherit" placeholder="계좌번호" autocomplete="off">
-        <input style="width:100px;border:none;border-bottom:0.5px solid #ddd;padding:3px 4px;font-size:13px;background:transparent;color:#1a1a1a;outline:none;font-family:inherit" placeholder="예금주" autocomplete="off">
+    <div class="footer-info" style="flex:1">
+
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:.6rem;flex-wrap:wrap">
+        <span style="font-size:12px;font-weight:500;color:#888;white-space:nowrap;min-width:70px">입금 계좌 :</span>
+        <input id="f-bank" style="width:80px;border:none;border-bottom:0.5px solid #ddd;padding:3px 4px;font-size:13px;background:transparent;color:#1a1a1a;outline:none;font-family:inherit" placeholder="은행명" autocomplete="off">
+        <input id="f-acct" style="flex:1;min-width:100px;border:none;border-bottom:0.5px solid #ddd;padding:3px 4px;font-size:13px;background:transparent;color:#1a1a1a;outline:none;font-family:inherit" placeholder="계좌번호" autocomplete="off">
+        <input id="f-owner" style="width:90px;border:none;border-bottom:0.5px solid #ddd;padding:3px 4px;font-size:13px;background:transparent;color:#1a1a1a;outline:none;font-family:inherit" placeholder="예금주" autocomplete="off">
       </div>
-      <span class="footer-label">홈페이지</span>
-      <div class="footer-url">
-        <span>https://</span>
-        <input placeholder="www.company.com" autocomplete="off">
+
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:.6rem">
+        <span style="font-size:12px;font-weight:500;color:#888;white-space:nowrap;min-width:70px">홈페이지 :</span>
+        <span style="font-size:13px;color:#888">https://</span>
+        <input id="f-url" style="flex:1;border:none;border-bottom:0.5px solid #ddd;padding:3px 4px;font-size:13px;background:transparent;color:#1a1a1a;outline:none;font-family:inherit" placeholder="www.company.com" autocomplete="off">
       </div>
-      <div style="margin-top:.75rem">
-        <span class="footer-label">추가 안내</span>
-        <input style="width:100%;border:none;border-bottom:0.5px solid #ddd;padding:4px 2px;font-size:13px;background:transparent;color:#1a1a1a;outline:none;font-family:inherit" placeholder="문의: 02-0000-0000  |  이메일: info@company.com" autocomplete="off">
+
+      <div id="f-note-wrap" style="display:flex;align-items:center;gap:6px">
+        <span style="font-size:12px;font-weight:500;color:#888;white-space:nowrap;min-width:70px">추가 안내 :</span>
+        <input id="f-note" style="flex:1;border:none;border-bottom:0.5px solid #ddd;padding:3px 4px;font-size:13px;background:transparent;color:#1a1a1a;outline:none;font-family:inherit" placeholder="문의: 02-0000-0000  |  이메일: info@company.com" autocomplete="off">
       </div>
+
     </div>
     <div class="qr-area">
       <span class="footer-label no-print">QR 코드</span>
@@ -452,6 +456,18 @@ function loadLogo(e){
     $('lprint').src=src;$('lprint').style.display='block';
   };r.readAsDataURL(f);
 }
+
+window.addEventListener('beforeprint', function(){
+  const noteEl = document.getElementById('f-note');
+  const noteWrap = document.getElementById('f-note-wrap');
+  if(noteEl && noteWrap){
+    noteWrap.style.display = noteEl.value.trim() ? 'flex' : 'none';
+  }
+});
+window.addEventListener('afterprint', function(){
+  const noteWrap = document.getElementById('f-note-wrap');
+  if(noteWrap) noteWrap.style.display = 'flex';
+});
 
 function loadQR(e){
   const f=e.target.files[0];if(!f)return;
