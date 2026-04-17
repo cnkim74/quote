@@ -412,18 +412,57 @@ async function saveToGDrive(){
   showToast('Google 로그인 중...');
   try{gAccessToken=await getAccessToken();}
   catch(e){showToast('로그인이 취소됐습니다');return;}
-  showToast('Drive에 저장 중...');
+  showToast('PDF 생성 중...');
+
+  /* 인쇄 전 no-print 요소 숨기기 */
+  const noPrintEls = document.querySelectorAll('.no-print');
+  noPrintEls.forEach(el=>el.setAttribute('data-hidden','1') || (el.style.display='none'));
+
+  /* 현재 페이지 HTML + 스타일 전체 캡처 */
+  const styles = Array.from(document.styleSheets).map(s=>{
+    try{ return Array.from(s.cssRules).map(r=>r.cssText).join(''); }catch(e){return '';}
+  }).join('');
+
+  const pageHtml = document.querySelector('.page').innerHTML;
+  const fullHtml = `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8">
+<title>견적서</title><style>${styles}</style></head>
+<body style="background:white;padding:1rem">${pageHtml}</body></html>`;
+
+  /* no-print 복원 */
+  noPrintEls.forEach(el=>{ el.removeAttribute('data-hidden'); el.style.display=''; });
+
+  /* Google Drive에 HTML로 업로드 후 Google Docs로 변환 요청 */
   const qno=$('q-no').value||'quote';
-  const filename=`견적서_${qno}_${new Date().toISOString().slice(0,10)}.html`;
-  const html=`<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>견적서</title></head><body>${document.querySelector('.page').innerHTML}</body></html>`;
+  const filename=`견적서_${qno}_${new Date().toISOString().slice(0,10)}`;
+
+  showToast('Drive에 저장 중...');
+
+  /* 1단계: HTML 파일 업로드 */
   const form=new FormData();
-  form.append('metadata',new Blob([JSON.stringify({name:filename,mimeType:'text/html'})],{type:'application/json'}));
-  form.append('file',new Blob([html],{type:'text/html'}));
+  form.append('metadata',new Blob([JSON.stringify({
+    name: filename,
+    mimeType:'application/vnd.google-apps.document'
+  })],{type:'application/json'}));
+  form.append('file',new Blob([fullHtml],{type:'text/html'}));
+
   const res=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',{
     method:'POST',headers:{Authorization:'Bearer '+gAccessToken},body:form
   });
-  if(res.ok){showToast(`Drive에 저장됐습니다: ${filename}`,3500);}
-  else{showToast('저장 실패. 권한을 확인해주세요');}
+
+  if(res.ok){
+    const data=await res.json();
+    const fileId=data.id;
+
+    /* 2단계: Google Docs → PDF 내보내기 링크 열기 */
+    const pdfUrl=`https://docs.google.com/document/d/${fileId}/export?format=pdf`;
+    showToast(`Drive에 저장됐습니다: ${filename}`,3500);
+
+    setTimeout(()=>{
+      window.open(`https://drive.google.com/file/d/${fileId}/view`,'_blank');
+    },1500);
+  } else {
+    showToast('저장 실패. 권한을 확인해주세요');
+  }
 }
 
 function saveTpl(){
