@@ -153,7 +153,7 @@ tbody tr:hover td{background:#fafafa}
     </div>
     <!-- 오른쪽: 견적 정보 + 직인 -->
     <div class="doc-meta">
-      <div class="meta-row"><span class="meta-label">견적 번호</span><input class="meta-input" id="q-no" value="Q-2026-001"></div>
+      <div class="meta-row"><span class="meta-label">견적 번호</span><input class="meta-input" id="q-no" readonly style="text-align:right;border:none;border-bottom:0.5px solid #ddd;border-radius:0;padding:2px 4px;font-size:13px;background:transparent;color:#1a1a1a;width:150px;cursor:default"></div>
       <div class="meta-row"><span class="meta-label">견적 일자</span><input class="meta-input" type="date" id="q-date"></div>
       <div class="meta-row"><span class="meta-label">유효기간</span><input class="meta-input" id="q-valid" placeholder="30일"></div>
       <div class="meta-row"><span class="meta-label">납기</span><input class="meta-input" id="q-delivery" placeholder="협의 후 결정"></div>
@@ -297,6 +297,17 @@ const fmt=n=>Math.round(n).toLocaleString('ko-KR');
 const $=id=>document.getElementById(id);
 
 $('q-date').value=new Date().toISOString().slice(0,10);
+
+/* 견적번호 자동 카운팅 */
+function genQuoteNo(){
+  const year=new Date().getFullYear();
+  const key='qb_quote_no_'+year;
+  let seq=1;
+  try{ seq=parseInt(localStorage.getItem(key)||'0')+1; }catch(e){}
+  try{ localStorage.setItem(key,seq); }catch(e){}
+  return 'Q-'+year+'-'+String(seq).padStart(3,'0');
+}
+$('q-no').value=genQuoteNo();
 
 function showToast(msg,dur=2500){const t=$('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
 
