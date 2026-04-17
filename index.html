@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>견적서</title>
 <script src="https://apis.google.com/js/api.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://accounts.google.com/gsi/client"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -126,9 +127,9 @@ tbody tr:hover td{background:#fafafa}
   </div>
   <div class="topbar-right">
     <button class="btn" onclick="saveTpl()">템플릿 저장</button>
-    <button class="btn btn-gdrive" id="gdrive-btn" onclick="saveToGDrive()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M8 18L2 8l4-6h12l4 6-6 10H8z" stroke="#4285f4" stroke-width="1.5" stroke-linejoin="round"/></svg>
-      Drive 저장
+    <button class="btn btn-gdrive" id="gdrive-btn" onclick="savePDF()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0l-4-4m4 4l4-4M3 17v2a2 2 0 002 2h14a2 2 0 002-2v-2" stroke="#4285f4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      PDF 저장
     </button>
     <button class="btn btn-primary" onclick="window.print()">인쇄 / PDF</button>
   </div>
@@ -408,60 +409,35 @@ function getAccessToken(){
   });
 }
 
-async function saveToGDrive(){
-  showToast('Google 로그인 중...');
-  try{gAccessToken=await getAccessToken();}
-  catch(e){showToast('로그인이 취소됐습니다');return;}
-  showToast('PDF 생성 중...');
+async function savePDF(){
+  showToast('PDF 변환 중...');
 
-  /* 인쇄 전 no-print 요소 숨기기 */
-  const noPrintEls = document.querySelectorAll('.no-print');
-  noPrintEls.forEach(el=>el.setAttribute('data-hidden','1') || (el.style.display='none'));
+  const qno = $('q-no').value || 'quote';
+  const filename = `견적서_${qno}_${new Date().toISOString().slice(0,10)}.pdf`;
+  const element = document.querySelector('.page');
 
-  /* 현재 페이지 HTML + 스타일 전체 캡처 */
-  const styles = Array.from(document.styleSheets).map(s=>{
-    try{ return Array.from(s.cssRules).map(r=>r.cssText).join(''); }catch(e){return '';}
-  }).join('');
+  const opt = {
+    margin: [8, 8, 8, 8],
+    filename: filename,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      ignoreElements: el => el.classList.contains('no-print')
+    },
+    jsPDF: {
+      unit: 'mm',
+      format: 'a4',
+      orientation: 'portrait'
+    }
+  };
 
-  const pageHtml = document.querySelector('.page').innerHTML;
-  const fullHtml = `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8">
-<title>견적서</title><style>${styles}</style></head>
-<body style="background:white;padding:1rem">${pageHtml}</body></html>`;
-
-  /* no-print 복원 */
-  noPrintEls.forEach(el=>{ el.removeAttribute('data-hidden'); el.style.display=''; });
-
-  /* Google Drive에 HTML로 업로드 후 Google Docs로 변환 요청 */
-  const qno=$('q-no').value||'quote';
-  const filename=`견적서_${qno}_${new Date().toISOString().slice(0,10)}`;
-
-  showToast('Drive에 저장 중...');
-
-  /* 1단계: HTML 파일 업로드 */
-  const form=new FormData();
-  form.append('metadata',new Blob([JSON.stringify({
-    name: filename,
-    mimeType:'application/vnd.google-apps.document'
-  })],{type:'application/json'}));
-  form.append('file',new Blob([fullHtml],{type:'text/html'}));
-
-  const res=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',{
-    method:'POST',headers:{Authorization:'Bearer '+gAccessToken},body:form
-  });
-
-  if(res.ok){
-    const data=await res.json();
-    const fileId=data.id;
-
-    /* 2단계: Google Docs → PDF 내보내기 링크 열기 */
-    const pdfUrl=`https://docs.google.com/document/d/${fileId}/export?format=pdf`;
-    showToast(`Drive에 저장됐습니다: ${filename}`,3500);
-
-    setTimeout(()=>{
-      window.open(`https://drive.google.com/file/d/${fileId}/view`,'_blank');
-    },1500);
-  } else {
-    showToast('저장 실패. 권한을 확인해주세요');
+  try {
+    await html2pdf().set(opt).from(element).save();
+    showToast('PDF 저장 완료!', 2500);
+  } catch(e) {
+    showToast('PDF 저장 실패. 다시 시도해주세요.');
   }
 }
 
