@@ -1,1 +1,511 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>견적서</title>
+<script src="https://apis.google.com/js/api.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1a1a1a;background:#f5f5f3;font-size:16px}
+.page{max-width:960px;margin:0 auto;padding:1.5rem 1rem}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:8px}
+.topbar-left p{font-size:20px;font-weight:500}
+.topbar-left span{font-size:13px;color:#666}
+.topbar-right{display:flex;gap:8px;flex-wrap:wrap}
+.btn{padding:7px 16px;font-size:13px;border:0.5px solid #ccc;border-radius:8px;background:transparent;color:#1a1a1a;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{background:#f0f0f0}
+.btn-primary{background:#1a1a1a;color:#fff;border-color:transparent}
+.btn-primary:hover{opacity:.85}
+.btn-gdrive{border-color:#4285f4;color:#4285f4}
+.btn-gdrive:hover{background:#e8f0fe}
+.btn-sm{padding:5px 10px;font-size:12px}
+.card{background:#fff;border:0.5px solid #e0e0e0;border-radius:12px;padding:1.25rem;margin-bottom:1rem}
+.doc-header{display:grid;grid-template-columns:1fr auto;gap:2rem;align-items:start}
+.doc-title{font-size:28px;font-weight:500;letter-spacing:-.02em}
+.doc-meta{display:flex;flex-direction:column;gap:6px;min-width:210px}
+.meta-row{display:flex;justify-content:flex-end;align-items:center;gap:10px;font-size:13px}
+.meta-label{color:#888;white-space:nowrap}
+.meta-input{text-align:right;border:none;border-bottom:0.5px solid #ddd;border-radius:0;padding:2px 4px;font-size:13px;background:transparent;color:#1a1a1a;width:150px}
+.meta-input:focus{outline:none;border-bottom-color:#888}
+.divider{height:0.5px;background:#eee;margin:1rem 0}
+.parties{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+.party-label{font-size:11px;font-weight:500;color:#888;letter-spacing:.06em;text-transform:uppercase;margin-bottom:.5rem}
+.pf{margin-bottom:6px}
+.pf label{font-size:11px;color:#888;display:block;margin-bottom:2px}
+.pf input{width:100%;border:none;border-bottom:0.5px solid #ddd;border-radius:0;padding:3px 0;font-size:13px;background:transparent;color:#1a1a1a}
+.pf input:focus{outline:none;border-bottom-color:#888}
+.ceo-row{display:flex;align-items:center;gap:10px}
+.ceo-row input{flex:1;border:none;border-bottom:0.5px solid #ddd;border-radius:0;padding:3px 0;font-size:13px;background:transparent;color:#1a1a1a}
+.ceo-row input:focus{outline:none;border-bottom-color:#888}
+.seal-wrap{width:52px;height:52px;flex-shrink:0}
+.seal-img{width:52px;height:52px;object-fit:contain;display:block}
+.seal-upload-btn{width:52px;height:52px;border:0.5px dashed #ccc;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:10px;color:#aaa;text-align:center;line-height:1.3}
+.seal-upload-btn:hover{background:#f5f5f5}
+.logo-zone{width:100%;height:52px;border:0.5px dashed #ccc;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;color:#aaa;margin-bottom:.75rem;overflow:hidden}
+.logo-zone img{max-height:48px;max-width:180px;object-fit:contain}
+.status-chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 10px;border-radius:20px;background:#fff8e1;color:#b45309}
+.dot{width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block}
+table{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}
+th{font-size:11px;font-weight:500;color:#888;padding:8px 10px;letter-spacing:.04em;border-bottom:0.5px solid #ddd;white-space:nowrap}
+td{padding:3px 8px;border-bottom:0.5px solid #eee;vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:#fafafa}
+.fi{display:block;width:100%;border:none;background:transparent;font-size:13px;font-family:inherit;color:#1a1a1a;padding:6px 4px;outline:none}
+.fi:focus{border-bottom:0.5px solid #888}
+.fi::placeholder{color:#bbb}
+.fi-r{text-align:right;-moz-appearance:textfield}
+.fi-r::-webkit-outer-spin-button,.fi-r::-webkit-inner-spin-button{-webkit-appearance:none}
+.c-auto{text-align:right;font-variant-numeric:tabular-nums;font-weight:500;white-space:nowrap;font-size:13px}
+.c-tax{text-align:right;font-size:12px;color:#888;font-variant-numeric:tabular-nums;white-space:nowrap}
+.c-no{text-align:center;font-size:12px;color:#aaa}
+.del-btn{width:24px;height:24px;border:none;background:transparent;cursor:pointer;color:#aaa;font-size:12px;border-radius:4px;display:block;margin:auto}
+.del-btn:hover{background:#fee2e2;color:#991b1b}
+.table-footer{display:flex;justify-content:space-between;align-items:flex-start;margin-top:1rem;gap:1rem;flex-wrap:wrap}
+.note-area{flex:1;min-width:200px}
+.note-area label{font-size:11px;color:#888;letter-spacing:.04em;text-transform:uppercase;display:block;margin-bottom:4px}
+.note-area textarea{width:100%;border:0.5px solid #e0e0e0;border-radius:8px;padding:8px 10px;font-size:13px;background:transparent;color:#1a1a1a;resize:vertical;min-height:72px;line-height:1.6;font-family:inherit}
+.note-area textarea:focus{outline:none;border-color:#888}
+.summary{min-width:260px;background:#f5f5f3;border-radius:12px;padding:1rem}
+.sum-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0}
+.sum-row span:first-child{color:#888}
+.sum-row span:last-child{font-variant-numeric:tabular-nums}
+.tax-select-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:4px 0;gap:8px}
+.tax-select-row span:first-child{color:#888}
+.tax-select-row select{font-size:12px;border:0.5px solid #ddd;border-radius:8px;padding:3px 6px;background:#fff;color:#1a1a1a}
+.tax-ci{width:52px;text-align:right;font-size:12px;border:0.5px solid #ddd;border-radius:8px;padding:3px 6px;background:#fff;color:#1a1a1a}
+.sum-divider{height:0.5px;background:#ddd;margin:8px 0}
+.sum-total{display:flex;justify-content:space-between;font-size:16px;font-weight:500;padding:4px 0}
+.sum-total span:last-child{font-variant-numeric:tabular-nums;color:#185fa5}
+.chip{font-size:12px;padding:3px 10px;border:0.5px solid #ccc;border-radius:20px;cursor:pointer;background:transparent;color:#1a1a1a}
+.chip:hover{background:#f0f0f0}
+.doc-footer{display:flex;justify-content:space-between;align-items:flex-start;gap:1.5rem;flex-wrap:wrap}
+.footer-info{flex:1;min-width:200px}
+.footer-info label{font-size:11px;font-weight:500;color:#888;letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:.5rem}
+.footer-url{display:flex;align-items:center;gap:8px;border-bottom:0.5px solid #ddd;padding-bottom:4px}
+.footer-url span{font-size:12px;color:#888;white-space:nowrap}
+.footer-url input{flex:1;border:none;background:transparent;font-size:13px;font-family:inherit;color:#1a1a1a;padding:4px 2px;outline:none}
+.qr-area{display:flex;flex-direction:column;align-items:center;gap:6px}
+.qr-area label{font-size:11px;font-weight:500;color:#888;letter-spacing:.06em;text-transform:uppercase}
+.qr-box{width:90px;height:90px;border:0.5px dashed #ccc;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;font-size:11px;color:#aaa;text-align:center;line-height:1.4}
+.qr-box:hover{background:#f5f5f5}
+.qr-box img{width:90px;height:90px;object-fit:contain}
+.gdrive-setup{background:#e8f0fe;border:0.5px solid #b5d4f4;border-radius:8px;padding:.75rem 1rem;margin-bottom:1rem;display:flex;align-items:flex-start;gap:10px;font-size:13px}
+.gdrive-setup p{color:#185fa5;line-height:1.6}
+.gdrive-setup input{margin-top:6px;width:100%;border:0.5px solid #b5d4f4;border-radius:8px;padding:6px 10px;font-size:13px;background:#fff;color:#1a1a1a;font-family:inherit}
+.gdrive-setup input:focus{outline:none}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999}
+.toast.show{opacity:1}
+@media print{
+  .no-print{display:none!important}
+  body{background:white}
+  .card{border:0.5px solid #ddd;break-inside:avoid}
+  .page{padding:.5rem}
+  tbody tr:hover td{background:transparent}
+  .sum-total span:last-child{color:inherit}
+  .seal-upload-btn{display:none}
+  .qr-box{border:none}
+}
+</style>
+</head>
+<body>
 
+<div class="toast" id="toast"></div>
+
+<div class="page">
+
+<div class="gdrive-setup no-print" id="gdrive-setup">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;margin-top:2px"><path d="M12 2L2 19h20L12 2z" stroke="#185fa5" stroke-width="1.5" stroke-linejoin="round"/><path d="M12 9v5M12 16.5v.5" stroke="#185fa5" stroke-width="1.5" stroke-linecap="round"/></svg>
+  <div style="flex:1">
+    <p style="font-weight:500;margin-bottom:2px">Google Drive 연동 설정</p>
+    <p>Google Cloud Console에서 발급한 OAuth 클라이언트 ID를 입력하면 Drive 저장 버튼이 활성화됩니다.</p>
+    <input id="client-id-input" placeholder="000000000000-xxxxxxxxxxxxxxxx.apps.googleusercontent.com" autocomplete="off">
+    <div style="display:flex;gap:8px;margin-top:6px;align-items:center">
+      <button class="btn btn-sm" onclick="applyClientId()">적용</button>
+      <a href="https://console.cloud.google.com/" target="_blank" style="font-size:12px;color:#185fa5">Console 열기 →</a>
+    </div>
+  </div>
+</div>
+
+<div class="topbar no-print">
+  <div class="topbar-left">
+    <p>견적서</p>
+    <span>수량·단가 입력 후 Tab 클릭 시 자동 계산됩니다</span>
+  </div>
+  <div class="topbar-right">
+    <button class="btn" onclick="saveTpl()">템플릿 저장</button>
+    <button class="btn btn-gdrive" id="gdrive-btn" onclick="saveToGDrive()" disabled style="opacity:.4;cursor:not-allowed">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M8 18L2 8l4-6h12l4 6-6 10H8z" stroke="#4285f4" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 18l4-6 4 6" stroke="#4285f4" stroke-width="1.5" stroke-linejoin="round"/><path d="M12 12L6 2" stroke="#4285f4" stroke-width="1.5"/><path d="M12 12l6-10" stroke="#4285f4" stroke-width="1.5"/></svg>
+      Drive 저장
+    </button>
+    <button class="btn btn-primary" onclick="window.print()">인쇄 / PDF</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="doc-header">
+    <div>
+      <div class="logo-zone no-print" onclick="document.getElementById('lf').click()">
+        <span id="lph">+ 로고 업로드</span>
+        <img id="limg" style="display:none">
+        <input type="file" id="lf" accept="image/*" style="display:none" onchange="loadLogo(event)">
+      </div>
+      <img id="lprint" style="display:none;max-height:48px;max-width:180px;object-fit:contain;margin-bottom:8px">
+      <p class="doc-title">견적서</p>
+      <div style="margin-top:6px"><span class="status-chip no-print"><span class="dot"></span>작성 중</span></div>
+    </div>
+    <div class="doc-meta">
+      <div class="meta-row"><span class="meta-label">견적 번호</span><input class="meta-input" id="q-no" value="Q-2026-001"></div>
+      <div class="meta-row"><span class="meta-label">견적 일자</span><input class="meta-input" type="date" id="q-date"></div>
+      <div class="meta-row"><span class="meta-label">유효기간</span><input class="meta-input" id="q-valid" placeholder="30일"></div>
+      <div class="meta-row"><span class="meta-label">납기</span><input class="meta-input" id="q-delivery" placeholder="협의 후 결정"></div>
+    </div>
+  </div>
+  <div class="divider"></div>
+  <div class="parties">
+    <div>
+      <p class="party-label">공급자</p>
+      <div class="pf"><label>회사명</label><input placeholder="(주)예시 회사"></div>
+      <div class="pf">
+        <label>대표자</label>
+        <div class="ceo-row">
+          <input placeholder="홍길동">
+          <div class="seal-wrap">
+            <div class="seal-upload-btn no-print" id="seal-btn" onclick="document.getElementById('seal-file').click()" title="직인 업로드 (PNG 권장)">직인<br>업로드</div>
+            <img id="seal-img" class="seal-img" style="display:none">
+            <input type="file" id="seal-file" accept="image/*" style="display:none" onchange="loadSeal(event)">
+          </div>
+        </div>
+      </div>
+      <div class="pf"><label>사업자등록번호</label><input placeholder="000-00-00000"></div>
+      <div class="pf"><label>전화</label><input placeholder="02-0000-0000"></div>
+      <div class="pf"><label>이메일</label><input placeholder="info@company.com"></div>
+      <div class="pf"><label>주소</label><input placeholder="서울시 강남구..."></div>
+    </div>
+    <div>
+      <p class="party-label">수신처</p>
+      <div class="pf"><label>회사명</label><input placeholder="(주)고객 회사"></div>
+      <div class="pf"><label>담당자</label><input placeholder="김담당"></div>
+      <div class="pf"><label>부서</label><input placeholder="구매팀"></div>
+      <div class="pf"><label>전화</label><input placeholder="02-0000-0000"></div>
+      <div class="pf"><label>이메일</label><input placeholder="buyer@client.com"></div>
+      <div class="pf"><label>주소</label><input placeholder="서울시..."></div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="no-print" style="margin-bottom:1rem">
+    <p style="font-size:11px;color:#888;letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px">저장된 템플릿</p>
+    <div style="display:flex;flex-wrap:wrap;gap:4px" id="tpl-chips">
+      <span style="font-size:12px;color:#aaa">템플릿 없음</span>
+    </div>
+  </div>
+  <table>
+      <colgroup>
+        <col style="width:26px"><col style="width:36%"><col style="width:9%">
+        <col style="width:9%"><col style="width:14%"><col style="width:16%">
+        <col style="width:14%"><col style="width:26px">
+      </colgroup>
+      <thead>
+        <tr>
+          <th style="text-align:center"></th>
+          <th>품목명</th><th>규격</th>
+          <th style="text-align:right">수량</th>
+          <th style="text-align:right">단가 (원)</th>
+          <th style="text-align:right">공급가액</th>
+          <th style="text-align:right">부가세</th>
+          <th class="no-print"></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  <div style="margin-top:.75rem" class="no-print">
+    <button class="btn btn-sm" onclick="addRow()">+ 품목 추가</button>
+  </div>
+  <div class="table-footer">
+    <div class="note-area">
+      <label>비고 / 특이사항</label>
+      <textarea placeholder="결제 조건, 특별 약관, 유의사항 등"></textarea>
+    </div>
+    <div class="summary">
+      <div class="sum-row"><span>공급가액 합계</span><span id="s-sub">0 원</span></div>
+      <div class="tax-select-row">
+        <span>부가세율</span>
+        <div class="no-print" style="display:flex;gap:4px;align-items:center">
+          <select id="tax-sel" onchange="onTaxChange()">
+            <option value="0.1">10%</option>
+            <option value="0">면세 0%</option>
+            <option value="custom">직접입력</option>
+          </select>
+          <input type="number" id="tax-custom" class="tax-ci" placeholder="%" style="display:none" oninput="onTaxChange()">
+        </div>
+        <span id="s-tax">0 원</span>
+      </div>
+      <div class="sum-divider"></div>
+      <div class="sum-total"><span>최종 합계</span><span id="s-total">0 원</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="doc-footer">
+    <div class="footer-info">
+      <label>입금 계좌</label>
+      <div style="display:flex;align-items:center;gap:8px;border-bottom:0.5px solid #ddd;padding-bottom:6px;margin-bottom:1rem;flex-wrap:wrap">
+        <input style="width:90px;border:none;border-bottom:0.5px solid #ddd;padding:3px 4px;font-size:13px;background:transparent;color:#1a1a1a;outline:none;font-family:inherit" placeholder="은행명" autocomplete="off">
+        <input style="flex:1;min-width:120px;border:none;border-bottom:0.5px solid #ddd;padding:3px 4px;font-size:13px;background:transparent;color:#1a1a1a;outline:none;font-family:inherit" placeholder="계좌번호" autocomplete="off">
+        <input style="width:110px;border:none;border-bottom:0.5px solid #ddd;padding:3px 4px;font-size:13px;background:transparent;color:#1a1a1a;outline:none;font-family:inherit" placeholder="예금주" autocomplete="off">
+      </div>
+      <label>홈페이지</label>
+      <div class="footer-url">
+        <span>https://</span>
+        <input placeholder="www.company.com" autocomplete="off">
+      </div>
+      <div style="margin-top:1rem">
+        <label style="font-size:11px;font-weight:500;color:#888;letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:.5rem">추가 안내</label>
+        <input style="width:100%;border:none;border-bottom:0.5px solid #ddd;padding:4px 2px;font-size:13px;background:transparent;color:#1a1a1a;outline:none;font-family:inherit" placeholder="문의: 02-0000-0000  |  이메일: info@company.com" autocomplete="off">
+      </div>
+    </div>
+    <div class="qr-area">
+      <label>QR 코드</label>
+      <div class="qr-box" onclick="document.getElementById('qr-file').click()">
+        <span id="qr-ph">+ QR<br>업로드</span>
+        <img id="qr-img" style="display:none">
+        <input type="file" id="qr-file" accept="image/*" style="display:none" onchange="loadQR(event)">
+      </div>
+      <span style="font-size:11px;color:#aaa">클릭하여 업로드</span>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+let uid = 0;
+const store = {};
+let templates = [];
+let gClientId = '392953567763-470h0tektfv6c6u7ql1tea65ccraelvi.apps.googleusercontent.com';
+let gAccessToken = '';
+
+try { templates = JSON.parse(localStorage.getItem('qb14') || '[]'); } catch(e){}
+try { const saved = localStorage.getItem('qb14_cid'); if(saved) gClientId = saved; } catch(e){}
+
+const fmt = n => Math.round(n).toLocaleString('ko-KR');
+const $ = id => document.getElementById(id);
+
+document.getElementById('q-date').value = new Date().toISOString().slice(0,10);
+
+enableDriveBtn();
+initGapi();
+
+function showToast(msg, dur=2500) {
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+function applyClientId() {
+  const val = $('client-id-input').value.trim();
+  if (!val) { showToast('클라이언트 ID를 입력해주세요'); return; }
+  gClientId = val;
+  try { localStorage.setItem('qb14_cid', gClientId); } catch(e){}
+  enableDriveBtn();
+  initGapi();
+  showToast('클라이언트 ID가 저장됐습니다');
+}
+
+function enableDriveBtn() {
+  const btn = $('gdrive-btn');
+  btn.disabled = false;
+  btn.style.opacity = '1';
+  btn.style.cursor = 'pointer';
+  $('gdrive-setup').style.display = 'none';
+}
+
+function initGapi() {
+  if (!gClientId) return;
+  gapi.load('client:auth2', () => {
+    gapi.client.init({
+      clientId: gClientId,
+      scope: 'https://www.googleapis.com/auth/drive.file'
+    }).then(() => {
+      const auth = gapi.auth2.getAuthInstance();
+      if (auth.isSignedIn.get()) {
+        gAccessToken = auth.currentUser.get().getAuthResponse().access_token;
+      }
+    }).catch(() => {});
+  });
+}
+
+function getTax() {
+  const v = $('tax-sel').value;
+  return v === 'custom' ? (parseFloat($('tax-custom').value)||0)/100 : parseFloat(v);
+}
+function onTaxChange() {
+  $('tax-custom').style.display = $('tax-sel').value === 'custom' ? 'inline' : 'none';
+  Object.keys(store).forEach(id => updateAmt(+id));
+  calcTotal();
+}
+function updateAmt(id) {
+  const r = store[id]; if (!r) return;
+  const amt = (parseFloat(r.qty)||0)*(parseFloat(r.price)||0);
+  const rate = getTax();
+  const ae=$('amt-'+id), te=$('tax-'+id);
+  if(ae) ae.textContent = amt>0 ? fmt(amt)+' 원' : '-';
+  if(te) te.textContent = amt>0 ? fmt(amt*rate)+' 원' : '-';
+}
+function calcTotal() {
+  const rate=getTax(); let sub=0;
+  Object.values(store).forEach(r=>{ sub+=(parseFloat(r.qty)||0)*(parseFloat(r.price)||0); });
+  const tax=sub*rate;
+  $('s-sub').textContent=fmt(sub)+' 원';
+  $('s-tax').textContent=fmt(tax)+' 원';
+  $('s-total').textContent=fmt(sub+tax)+' 원';
+}
+
+function addRow(d) {
+  const id=++uid;
+  store[id]={name:d?.name??'',spec:d?.spec??'',qty:d?.qty??'',price:d?.price??''};
+  const tbody=$('tbody');
+  const tr=document.createElement('tr'); tr.id='tr-'+id;
+
+  const tdNo=document.createElement('td'); tdNo.className='c-no'; tdNo.id='no-'+id;
+  tdNo.textContent=Object.keys(store).length; tr.appendChild(tdNo);
+
+  const inpName=document.createElement('input');
+  inpName.className='fi';inpName.type='text';inpName.placeholder='품목명';inpName.autocomplete='off';
+  inpName.value=store[id].name;
+  inpName.addEventListener('input',()=>{ store[id].name=inpName.value; });
+  const tdName=document.createElement('td'); tdName.appendChild(inpName); tr.appendChild(tdName);
+
+  const inpSpec=document.createElement('input');
+  inpSpec.className='fi';inpSpec.type='text';inpSpec.placeholder='규격';inpSpec.autocomplete='off';
+  inpSpec.value=store[id].spec;
+  inpSpec.addEventListener('input',()=>{ store[id].spec=inpSpec.value; });
+  const tdSpec=document.createElement('td'); tdSpec.appendChild(inpSpec); tr.appendChild(tdSpec);
+
+  const inpQty=document.createElement('input');
+  inpQty.className='fi fi-r';inpQty.type='number';inpQty.min='0';inpQty.step='1';inpQty.placeholder='0';
+  inpQty.value=store[id].qty!==''?store[id].qty:'';
+  inpQty.addEventListener('change',()=>{
+    const v=parseFloat(inpQty.value);
+    store[id].qty=isNaN(v)?'':Math.max(0,v);
+    inpQty.value=store[id].qty===''?'':store[id].qty;
+    updateAmt(id); calcTotal();
+  });
+  const tdQty=document.createElement('td'); tdQty.appendChild(inpQty); tr.appendChild(tdQty);
+
+  const inpPrice=document.createElement('input');
+  inpPrice.className='fi fi-r';inpPrice.type='number';inpPrice.min='0';inpPrice.step='1';inpPrice.placeholder='0';
+  inpPrice.value=store[id].price!==''?store[id].price:'';
+  inpPrice.addEventListener('change',()=>{
+    const v=parseFloat(inpPrice.value);
+    store[id].price=isNaN(v)?'':Math.max(0,v);
+    inpPrice.value=store[id].price===''?'':store[id].price;
+    updateAmt(id); calcTotal();
+  });
+  const tdPrice=document.createElement('td'); tdPrice.appendChild(inpPrice); tr.appendChild(tdPrice);
+
+  const tdAmt=document.createElement('td'); tdAmt.className='c-auto'; tdAmt.id='amt-'+id; tdAmt.textContent='-'; tr.appendChild(tdAmt);
+  const tdTax=document.createElement('td'); tdTax.className='c-tax'; tdTax.id='tax-'+id; tdTax.textContent='-'; tr.appendChild(tdTax);
+
+  const btn=document.createElement('button'); btn.className='del-btn'; btn.textContent='✕';
+  btn.addEventListener('click',()=>removeRow(id));
+  const tdDel=document.createElement('td'); tdDel.className='no-print'; tdDel.appendChild(btn); tr.appendChild(tdDel);
+
+  tbody.appendChild(tr);
+  if(d){ updateAmt(id); calcTotal(); }
+}
+
+function removeRow(id) {
+  delete store[id];
+  const tr=$('tr-'+id); if(tr) tr.remove();
+  let i=1;
+  Object.keys(store).forEach(rid=>{ const el=$('no-'+rid); if(el) el.textContent=i++; });
+  calcTotal();
+}
+
+async function saveToGDrive() {
+  if (!gClientId) { showToast('클라이언트 ID를 먼저 입력해주세요'); return; }
+  showToast('Google 로그인 중...');
+  try {
+    await gapi.auth2.getAuthInstance().signIn();
+    gAccessToken = gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse().access_token;
+  } catch(e) {
+    showToast('로그인이 취소됐습니다'); return;
+  }
+  showToast('Drive에 저장 중...');
+  const qno = $('q-no').value || 'quote';
+  const filename = `견적서_${qno}_${new Date().toISOString().slice(0,10)}.html`;
+  const html = `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>견적서</title></head><body>${document.querySelector('.page').innerHTML}</body></html>`;
+  const meta = { name: filename, mimeType: 'text/html' };
+  const form = new FormData();
+  form.append('metadata', new Blob([JSON.stringify(meta)], { type: 'application/json' }));
+  form.append('file', new Blob([html], { type: 'text/html' }));
+  const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + gAccessToken },
+    body: form
+  });
+  if (res.ok) {
+    showToast(`Drive에 저장됐습니다: ${filename}`, 3500);
+  } else {
+    showToast('저장 실패. 권한을 확인해주세요');
+  }
+}
+
+function saveTpl() {
+  const name=prompt('템플릿 이름'); if(!name) return;
+  const items=Object.values(store).filter(r=>r.name);
+  if(!items.length){ alert('저장할 품목이 없습니다'); return; }
+  templates.push({name, items:items.map(({name,spec,qty,price})=>({name,spec,qty,price}))});
+  try{ localStorage.setItem('qb14',JSON.stringify(templates)); }catch(e){}
+  renderTpl(); alert(`"${name}" 저장 완료`);
+}
+function loadTpl(i) {
+  if(!confirm('현재 품목을 이 템플릿으로 교체할까요?')) return;
+  Object.keys(store).forEach(id=>delete store[id]);
+  $('tbody').innerHTML=''; uid=0;
+  templates[i].items.forEach(it=>addRow(it));
+}
+function renderTpl() {
+  const el=$('tpl-chips');
+  el.innerHTML=templates.length
+    ? templates.map((t,i)=>`<button class="chip" onclick="loadTpl(${i})">${t.name}</button>`).join('')
+    : '<span style="font-size:12px;color:#aaa">템플릿 없음</span>';
+}
+function loadSeal(e) {
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    $('seal-btn').style.display='none';
+    const img=$('seal-img'); img.src=ev.target.result; img.style.display='block';
+    img.style.mixBlendMode='multiply';
+  }; r.readAsDataURL(f);
+}
+function loadLogo(e) {
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    const src=ev.target.result;
+    $('lph').style.display='none';
+    $('limg').src=src; $('limg').style.display='block';
+    $('lprint').src=src; $('lprint').style.display='block';
+  }; r.readAsDataURL(f);
+}
+function loadQR(e) {
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    $('qr-ph').style.display='none';
+    const img=$('qr-img');
+    img.src=ev.target.result; img.style.display='block';
+    img.style.width='90px'; img.style.height='90px'; img.style.objectFit='contain';
+  }; r.readAsDataURL(f);
+}
+
+addRow();
+renderTpl();
+</script>
+</body>
+</html>
