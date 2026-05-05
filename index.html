@@ -245,6 +245,18 @@ tbody tr:hover td{background:#fafafa}
         </div>
         <span id="s-tax">0 원</span>
       </div>
+      <div class="tax-select-row">
+        <span>절사</span>
+        <div class="no-print" style="display:flex;gap:4px;align-items:center">
+          <select id="round-sel" onchange="calcTotal()">
+            <option value="1">없음</option>
+            <option value="10">10원</option>
+            <option value="100">100원</option>
+            <option value="1000">1,000원</option>
+          </select>
+        </div>
+        <span id="s-cut" style="font-size:12px;color:#aaa"></span>
+      </div>
       <div class="sum-divider"></div>
       <div class="sum-total"><span>최종 합계</span><span id="s-total">0 원</span></div>
     </div>
@@ -333,9 +345,19 @@ function calcTotal(){
   const rate=getTax();let sub=0;
   Object.values(store).forEach(r=>{sub+=(parseFloat(r.qty)||0)*(parseFloat(r.price)||0);});
   const tax=sub*rate;
+  const total=sub+tax;
+  const unit=parseInt($('round-sel')?.value||'1');
+  const totalCut=Math.floor(total/unit)*unit;
+  const cutAmt=total-totalCut;
+
   $('s-sub').textContent=fmt(sub)+' 원';
   $('s-tax').textContent=fmt(tax)+' 원';
-  $('s-total').textContent=fmt(sub+tax)+' 원';
+  $('s-total').textContent=fmt(totalCut)+' 원';
+
+  const cutEl=$('s-cut');
+  if(cutEl){
+    cutEl.textContent=unit>1?`(-${fmt(cutAmt)}원 절사)`:'';
+  }
 }
 
 function addRow(d){
